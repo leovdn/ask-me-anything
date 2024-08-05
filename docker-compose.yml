@@ -1,0 +1,32 @@
+services:
+  db:
+    image: postgres:latest
+    restart: unless-stopped
+    ports:
+      - ${WSGO_DB_PORT:-5432}:5432
+    environment:
+      POSTGRES_USER: ${WSGO_DB_USER}
+      POSTGRES_PASSWORD: ${WSGO_DB_PASSWORD}
+      POSTGRES_DB: ${WSGO_DB_NAME}
+    volumes:
+      - db:/var/lib/postgresql/data
+
+  pgAdmin:
+    image: dpage/pgadmin4:latest
+    restart: unless-stopped
+    depends_on:
+      - db
+    ports:
+      - 8088:80
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: 123123
+    volumes:
+      - pgAdmin:/var/lib/pgadmin
+
+volumes:
+  db:
+    driver: local
+
+  pgAdmin:
+    driver: local
