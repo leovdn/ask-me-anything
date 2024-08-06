@@ -1,7 +1,8 @@
-create table rooms (
-  id uuid primary key not null default gen_random_uuid(),
-  theme varchar(255) not null
+CREATE TABLE IF NOT EXISTS rooms (
+    "id"    uuid            PRIMARY KEY     NOT NULL    DEFAULT gen_random_uuid(),
+    "theme" VARCHAR(255)                    NOT NULL
 );
+
 ---- create above / drop below ----
 
-drop table rooms;
+DROP TABLE IF EXISTS rooms;

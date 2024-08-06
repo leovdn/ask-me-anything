@@ -13,9 +13,10 @@ import (
 
 const getMessage = `-- name: GetMessage :one
 SELECT
-  "id", "room_id", "message", "reaction_count", "aswered"
+    "id", "room_id", "message", "reaction_count", "answered"
 FROM messages
-WHERE "id" = $1
+WHERE
+    id = $1
 `
 
 func (q *Queries) GetMessage(ctx context.Context, id uuid.UUID) (Message, error) {
@@ -26,20 +27,20 @@ func (q *Queries) GetMessage(ctx context.Context, id uuid.UUID) (Message, error)
 		&i.RoomID,
 		&i.Message,
 		&i.ReactionCount,
-		&i.Aswered,
+		&i.Answered,
 	)
 	return i, err
 }
 
 const getRoom = `-- name: GetRoom :one
 SELECT
-  "id", "theme"
+    "id", "theme"
 FROM rooms
-WHERE "theme" = $1
+WHERE id = $1
 `
 
-func (q *Queries) GetRoom(ctx context.Context, theme string) (Room, error) {
-	row := q.db.QueryRow(ctx, getRoom, theme)
+func (q *Queries) GetRoom(ctx context.Context, id uuid.UUID) (Room, error) {
+	row := q.db.QueryRow(ctx, getRoom, id)
 	var i Room
 	err := row.Scan(&i.ID, &i.Theme)
 	return i, err
@@ -47,9 +48,10 @@ func (q *Queries) GetRoom(ctx context.Context, theme string) (Room, error) {
 
 const getRoomMessages = `-- name: GetRoomMessages :many
 SELECT
-  "id", "room_id", "message", "reaction_count", "aswered"
+    "id", "room_id", "message", "reaction_count", "answered"
 FROM messages
-WHERE "room_id" = $1
+WHERE
+    room_id = $1
 `
 
 func (q *Queries) GetRoomMessages(ctx context.Context, roomID uuid.UUID) ([]Message, error) {
@@ -66,7 +68,7 @@ func (q *Queries) GetRoomMessages(ctx context.Context, roomID uuid.UUID) ([]Mess
 			&i.RoomID,
 			&i.Message,
 			&i.ReactionCount,
-			&i.Aswered,
+			&i.Answered,
 		); err != nil {
 			return nil, err
 		}
@@ -80,7 +82,7 @@ func (q *Queries) GetRoomMessages(ctx context.Context, roomID uuid.UUID) ([]Mess
 
 const getRooms = `-- name: GetRooms :many
 SELECT
-  "id", "theme"
+    "id", "theme"
 FROM rooms
 `
 
@@ -106,14 +108,14 @@ func (q *Queries) GetRooms(ctx context.Context) ([]Room, error) {
 
 const insertMessage = `-- name: InsertMessage :one
 INSERT INTO messages
-  ( "room_id", "message" ) VALUES
-  ( $1, $2 )
+    ( "room_id", "message" ) VALUES
+    ( $1, $2 )
 RETURNING "id"
 `
 
 type InsertMessageParams struct {
-	RoomID  uuid.UUID
-	Message string
+	RoomID  uuid.UUID `db:"room_id" json:"room_id"`
+	Message string    `db:"message" json:"message"`
 }
 
 func (q *Queries) InsertMessage(ctx context.Context, arg InsertMessageParams) (uuid.UUID, error) {
@@ -125,8 +127,8 @@ func (q *Queries) InsertMessage(ctx context.Context, arg InsertMessageParams) (u
 
 const insertRoom = `-- name: InsertRoom :one
 INSERT INTO rooms
-  ( "theme" ) VALUES
-  ( $1 )
+    ( "theme" ) VALUES
+    ( $1 )
 RETURNING "id"
 `
 
@@ -137,27 +139,26 @@ func (q *Queries) InsertRoom(ctx context.Context, theme string) (uuid.UUID, erro
 	return id, err
 }
 
-const markMessageAsAnswered = `-- name: MarkMessageAsAnswered :one
+const markMessageAsAnswered = `-- name: MarkMessageAsAnswered :exec
 UPDATE messages
 SET
-  "aswered" = true
-WHERE "id" = $1
-RETURNING "aswered"
+    answered = true
+WHERE
+    id = $1
 `
 
-func (q *Queries) MarkMessageAsAnswered(ctx context.Context, id uuid.UUID) (bool, error) {
-	row := q.db.QueryRow(ctx, markMessageAsAnswered, id)
-	var aswered bool
-	err := row.Scan(&aswered)
-	return aswered, err
+func (q *Queries) MarkMessageAsAnswered(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, markMessageAsAnswered, id)
+	return err
 }
 
 const reactToMessage = `-- name: ReactToMessage :one
 UPDATE messages
 SET
-  "reaction_count" = "reaction_count" + 1
-WHERE "id" = $1
-RETURNING "reaction_count"
+    reaction_count = reaction_count + 1
+WHERE
+    id = $1
+RETURNING reaction_count
 `
 
 func (q *Queries) ReactToMessage(ctx context.Context, id uuid.UUID) (int64, error) {
@@ -170,9 +171,10 @@ func (q *Queries) ReactToMessage(ctx context.Context, id uuid.UUID) (int64, erro
 const removeReactionFromMessage = `-- name: RemoveReactionFromMessage :one
 UPDATE messages
 SET
-  "reaction_count" = "reaction_count" - 1
-WHERE "id" = $1
-RETURNING "reaction_count"
+    reaction_count = reaction_count - 1
+WHERE
+    id = $1
+RETURNING reaction_count
 `
 
 func (q *Queries) RemoveReactionFromMessage(ctx context.Context, id uuid.UUID) (int64, error) {
