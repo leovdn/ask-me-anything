@@ -75,6 +75,32 @@ func NewHandler(q *pgstore.Queries) http.Handler {
 	return a
 }
 
+const (
+	MessageKindMessageCreated          = "message_created"
+	MessageKindMessageRactionIncreased = "message_reaction_increased"
+	MessageKindMessageRactionDecreased = "message_reaction_decreased"
+	MessageKindMessageAnswered         = "message_answered"
+)
+
+type MessageMessageReactionIncreased struct {
+	ID    string `json:"id"`
+	Count int64  `json:"count"`
+}
+
+type MessageMessageReactionDecreased struct {
+	ID    string `json:"id"`
+	Count int64  `json:"count"`
+}
+
+type MessageMessageAnswered struct {
+	ID string `json:"id"`
+}
+
+type MessageMessageCreated struct {
+	ID      string `json:"id"`
+	Message string `json:"message"`
+}
+
 type Message struct {
 	Kind   string `json:"kind"`
 	Value  any    `json:"value"`
@@ -224,6 +250,15 @@ func (h apiHandler) handleCreateRoomMessage(w http.ResponseWriter, r *http.Reque
 	}
 
 	sendJSON(w, response{ID: messageID.String()})
+
+	go h.notifyClients(Message{
+		Kind:   MessageKindMessageCreated,
+		RoomID: rawRoomID,
+		Value: MessageMessageCreated{
+			ID:      messageID.String(),
+			Message: body.Message,
+		},
+	})
 }
 
 func (h apiHandler) handleGetRoomMessages(w http.ResponseWriter, r *http.Request) {}
