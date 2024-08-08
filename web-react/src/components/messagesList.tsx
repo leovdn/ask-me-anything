@@ -18,9 +18,13 @@ export function MessagesList() {
 
   useMessagesWebsocket({ roomID })
 
+  const sortedMessages = data.messages.sort(
+    (a, b) => b.reactionAmount - a.reactionAmount
+  )
+
   return (
     <ol className="list-decimal list-outside px-3 space-y-8">
-      {data?.messages.map((message) => (
+      {sortedMessages.map((message) => (
         <Message
           key={message.id}
           id={message.id}
