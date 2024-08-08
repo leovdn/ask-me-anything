@@ -6,6 +6,12 @@ interface UseMessagesWebsocketParams {
   roomID: string
 }
 
+type WebhookMessage =
+  | { kind: 'message_created'; value: { id: string; message: string } }
+  | { kind: 'message_answered'; value: { id: string } }
+  | { kind: 'message_reaction_increased'; value: { id: string; count: number } }
+  | { kind: 'message_reaction_decreased'; value: { id: string; count: number } }
+
 export function useMessagesWebsocket({ roomID }: UseMessagesWebsocketParams) {
   const queryClient = useQueryClient()
 
@@ -21,7 +27,7 @@ export function useMessagesWebsocket({ roomID }: UseMessagesWebsocketParams) {
     }
 
     ws.onmessage = (event) => {
-      const data = JSON.parse(event.data)
+      const data: WebhookMessage = JSON.parse(event.data)
 
       switch (data.kind) {
         case 'message_created':
