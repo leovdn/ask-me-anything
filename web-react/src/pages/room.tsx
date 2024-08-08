@@ -1,8 +1,9 @@
-import { useParams } from 'react-router-dom'
-import logo from '../assets/ama-logo.svg'
-import { ArrowRight, Share2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { Message } from '../components/message'
+import { useParams } from 'react-router-dom'
+import { MessagesList } from '../components/messagesList'
+import { ArrowRight, Share2 } from 'lucide-react'
+
+import logo from '../assets/ama-logo.svg'
 
 export function Room() {
   const { roomID } = useParams()
@@ -15,7 +16,7 @@ export function Room() {
     } else {
       navigator.clipboard.writeText(url)
 
-      toast.info('Link copiado para a ação de compartilhar!')
+      toast.info('Link copiado para área de transferência!')
     }
   }
 
@@ -58,26 +59,7 @@ export function Room() {
         </button>
       </form>
 
-      <ol className="list-decimal list-outside px-3 space-y-8">
-        <Message
-          text="O que é Golang e quais são suas principais vantagens em comparação com
-            outras linguagens de programação como Python, Java ou C#"
-          reactionAmount={2}
-          answered
-        />
-
-        <Message
-          text="O que é Golang e quais são suas principais vantagens em comparação com
-            outras linguagens de programação como Python, Java ou C#"
-          reactionAmount={112}
-        />
-
-        <Message
-          text="O que é Golang e quais são suas principais vantagens em comparação com
-            outras linguagens de programação como Python, Java ou C#"
-          reactionAmount={52}
-        />
-      </ol>
+      <MessagesList />
     </div>
   )
 }
