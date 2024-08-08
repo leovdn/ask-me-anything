@@ -1,21 +1,49 @@
-import { ArrowUp } from 'lucide-react'
 import { useState } from 'react'
+import { useParams } from 'react-router-dom'
+import { ArrowUp } from 'lucide-react'
+import { addMessageReaction } from '../http/add-message-reaction'
+import { toast } from 'sonner'
+import { removeMessageReaction } from '../http/remove-message-reaction'
 
 interface MessageProps {
+  id: string
   text: string
   reactionAmount: number
   answered?: boolean
 }
 
 export function Message({
+  id: messageID,
   text,
-  reactionAmount = 0,
+  reactionAmount,
   answered = false,
 }: MessageProps) {
+  const { roomID } = useParams()
   const [hasReacted, setHasReacted] = useState(false)
 
-  function handleReactionToMessage() {
-    setHasReacted((prev) => !prev)
+  if (!roomID)
+    throw new Error('MessagesList component must be used within room page')
+
+  async function addMessageReactionAction() {
+    if (!roomID) return
+
+    try {
+      await addMessageReaction({ roomID, messageID })
+      setHasReacted(true)
+    } catch {
+      toast.error('Falha ao curtir mensagem!')
+    }
+  }
+
+  async function removeMessageReactionAction() {
+    if (!roomID) return
+
+    try {
+      await removeMessageReaction({ roomID, messageID })
+      setHasReacted(false)
+    } catch {
+      toast.error('Falha ao descurtir mensagem!')
+    }
   }
 
   return (
@@ -29,7 +57,7 @@ export function Message({
         <button
           type="button"
           className="mt-3 flex items-center gap-2 text-orange-400 text-sm font-medium hover:text-orange-500"
-          onClick={handleReactionToMessage}
+          onClick={removeMessageReactionAction}
         >
           <ArrowUp className="size-4" />
           Curtir pergunta ({reactionAmount})
@@ -38,7 +66,7 @@ export function Message({
         <button
           type="button"
           className="mt-3 flex items-center gap-2 text-zinc-400 text-sm font-medium hover:text-zinc-300"
-          onClick={handleReactionToMessage}
+          onClick={addMessageReactionAction}
         >
           <ArrowUp className="size-4" />
           Curtir pergunta ({reactionAmount})

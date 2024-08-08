@@ -19,6 +19,7 @@ export function MessagesList() {
       {data?.messages.map((message) => (
         <Message
           key={message.id}
+          id={message.id}
           text={message.message}
           reactionAmount={message.reactionAmount}
           answered={message.answered}
